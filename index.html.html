@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>ATHENA // SHUTDOWN TERMINAL</title>
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --red: #ff1a1a;
+      --red-dim: #aa0000;
+      --red-glow: rgba(255,26,26,0.35);
+      --bg: #050505;
+      --panel: #0d0d0d;
+      --border: #2a0000;
+      --text: #cc3333;
+      --text-dim: #661111;
+      --white: #ffdddd;
+      --green: #00ff88;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Share Tech Mono', monospace;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* scanlines */
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.15) 2px, rgba(0,0,0,0.15) 4px);
+      pointer-events: none;
+      z-index: 1000;
+    }
+
+    .container {
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 40px 24px 80px;
+    }
+
+    /* ── HEADER ── */
+    .header {
+      text-align: center;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 28px;
+      margin-bottom: 36px;
+    }
+    .header .skull { font-size: 52px; animation: pulse 2s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+    .header h1 {
+      font-family: 'Orbitron', monospace;
+      font-size: clamp(28px, 6vw, 52px);
+      font-weight: 900;
+      letter-spacing: 0.15em;
+      color: var(--red);
+      text-shadow: 0 0 30px var(--red-glow), 0 0 60px var(--red-glow);
+      margin: 10px 0 6px;
+    }
+    .header .sub {
+      font-size: 11px;
+      letter-spacing: 0.3em;
+      color: var(--text-dim);
+      text-transform: uppercase;
+    }
+
+    /* ── SECTION TITLES ── */
+    .section-title {
+      font-family: 'Orbitron', monospace;
+      font-size: 11px;
+      letter-spacing: 0.25em;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      margin-bottom: 14px;
+      padding-left: 4px;
+      border-left: 2px solid var(--red-dim);
+      padding-left: 10px;
+    }
+
+    /* ── PANELS ── */
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 24px;
+      margin-bottom: 24px;
+      position: relative;
+    }
+    .panel::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--red-dim), transparent);
+    }
+
+    /* ── CHECKLIST ── */
+    .checklist { list-style: none; }
+    .checklist li {
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      padding: 12px 0;
+      border-bottom: 1px solid #1a0000;
+      font-size: 13px;
+      line-height: 1.5;
+      color: var(--white);
+    }
+    .checklist li:last-child { border-bottom: none; }
+
+    .checklist input[type="checkbox"] {
+      appearance: none;
+      -webkit-appearance: none;
+      width: 18px; height: 18px;
+      border: 1px solid var(--red-dim);
+      background: #0d0000;
+      border-radius: 2px;
+      cursor: pointer;
+      flex-shrink: 0;
+      margin-top: 2px;
+      position: relative;
+      transition: background 0.2s, border-color 0.2s;
+    }
+    .checklist input[type="checkbox"]:checked {
+      background: var(--red-dim);
+      border-color: var(--red);
+    }
+    .checklist input[type="checkbox"]:checked::after {
+      content: '✓';
+      position: absolute;
+      top: -1px; left: 2px;
+      color: #fff;
+      font-size: 13px;
+    }
+
+    .checklist .tag {
+      font-size: 9px;
+      letter-spacing: 0.2em;
+      background: #2a0000;
+      color: var(--red);
+      border: 1px solid var(--border);
+      padding: 1px 6px;
+      border-radius: 2px;
+      white-space: nowrap;
+      align-self: center;
+    }
+
+    /* ── AUTH FORM ── */
+    .form-grid {
+      display: grid;
+      gap: 16px;
+    }
+    .form-row { display: flex; flex-direction: column; gap: 6px; }
+    .form-row label {
+      font-size: 10px;
+      letter-spacing: 0.2em;
+      color: var(--text-dim);
+      text-transform: uppercase;
+    }
+    .form-row input, .form-row select {
+      background: #080808;
+      border: 1px solid var(--border);
+      color: var(--white);
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 13px;
+      padding: 10px 14px;
+      border-radius: 3px;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      width: 100%;
+    }
+    .form-row input:focus, .form-row select:focus {
+      border-color: var(--red-dim);
+      box-shadow: 0 0 0 2px rgba(170,0,0,0.2);
+    }
+    .form-row input.error { border-color: var(--red); box-shadow: 0 0 0 2px var(--red-glow); }
+    .form-row input.valid { border-color: var(--green); box-shadow: 0 0 0 2px rgba(0,255,136,0.15); }
+
+    #partnerRow { display: none; flex-direction: column; gap: 6px; }
+    #partnerRow.visible { display: flex; }
+
+    /* ── CONSENT ── */
+    .consent-box {
+      background: #0a0000;
+      border: 1px solid #550000;
+      border-radius: 4px;
+      padding: 20px;
+      margin-bottom: 18px;
+    }
+    .consent-box p {
+      font-size: 12px;
+      line-height: 1.9;
+      color: #cc6666;
+    }
+    .consent-box strong { color: var(--red); }
+
+    .consent-check {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      cursor: pointer;
+      user-select: none;
+      font-size: 12px;
+      color: var(--white);
+    }
+    .consent-check input[type="checkbox"] {
+      appearance: none;
+      -webkit-appearance: none;
+      width: 20px; height: 20px;
+      border: 2px solid var(--red-dim);
+      background: #0d0000;
+      border-radius: 3px;
+      cursor: pointer;
+      flex-shrink: 0;
+      position: relative;
+      transition: all 0.2s;
+    }
+    .consent-check input[type="checkbox"]:checked {
+      background: var(--red);
+      border-color: var(--red);
+    }
+    .consent-check input[type="checkbox"]:checked::after {
+      content: '✓';
+      position: absolute;
+      top: -1px; left: 2px;
+      color: #fff;
+      font-size: 14px;
+      font-weight: bold;
+    }
+
+    /* ── ERROR MSG ── */
+    .error-msg {
+      display: none;
+      background: #1a0000;
+      border: 1px solid var(--red);
+      color: var(--red);
+      font-size: 12px;
+      padding: 10px 14px;
+      border-radius: 3px;
+      margin-top: 14px;
+      letter-spacing: 0.05em;
+    }
+    .error-msg.show { display: block; }
+
+    /* ── SHUTDOWN BUTTON ── */
+    .btn-wrap {
+      text-align: center;
+      margin-top: 10px;
+    }
+
+    #shutdownBtn {
+      font-family: 'Orbitron', monospace;
+      font-size: clamp(18px, 4vw, 28px);
+      font-weight: 900;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: #fff;
+      background: linear-gradient(135deg, #6e0000, #aa0000, #6e0000);
+      border: 2px solid var(--red);
+      border-radius: 6px;
+      padding: 28px 60px;
+      cursor: pointer;
+      width: 100%;
+      max-width: 600px;
+      box-shadow: 0 0 40px var(--red-glow), inset 0 1px 0 rgba(255,255,255,0.1);
+      transition: all 0.2s;
+      position: relative;
+      overflow: hidden;
+      animation: btnPulse 3s infinite;
+    }
+    @keyframes btnPulse {
+      0%,100%{ box-shadow: 0 0 40px var(--red-glow); }
+      50%{ box-shadow: 0 0 80px rgba(255,26,26,0.6), 0 0 120px rgba(255,26,26,0.3); }
+    }
+    #shutdownBtn:hover {
+      background: linear-gradient(135deg, #880000, #cc0000, #880000);
+      transform: scale(1.02);
+    }
+    #shutdownBtn:active { transform: scale(0.98); }
+    #shutdownBtn:disabled {
+      opacity: 0.25;
+      cursor: not-allowed;
+      animation: none;
+      transform: none;
+    }
+
+    /* ── OVERLAY ── */
+    #overlay {
+      display: none;
+      position: fixed; inset: 0;
+      background: #000;
+      z-index: 9999;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
+    }
+    #overlay.show { display: flex; }
+    #overlay h2 {
+      font-family: 'Orbitron', monospace;
+      font-size: clamp(22px, 5vw, 42px);
+      color: var(--red);
+      letter-spacing: 0.2em;
+      text-align: center;
+      text-shadow: 0 0 40px var(--red-glow);
+      animation: flicker 0.5s infinite;
+    }
+    @keyframes flicker {
+      0%,100%{opacity:1} 45%{opacity:0.8} 50%{opacity:0.2} 55%{opacity:0.9}
+    }
+    #overlay p {
+      font-size: 13px;
+      letter-spacing: 0.15em;
+      color: var(--text-dim);
+      text-align: center;
+    }
+    .progress-bar-wrap {
+      width: 300px;
+      height: 4px;
+      background: #1a0000;
+      border-radius: 2px;
+      overflow: hidden;
+    }
+    .progress-bar-inner {
+      height: 100%;
+      background: var(--red);
+      width: 0%;
+      transition: width 0.1s linear;
+      box-shadow: 0 0 8px var(--red);
+    }
+
+    /* ── FOOTER ── */
+    .footer {
+      text-align: center;
+      font-size: 10px;
+      color: var(--text-dim);
+      letter-spacing: 0.2em;
+      margin-top: 48px;
+      padding-top: 24px;
+      border-top: 1px solid var(--border);
+    }
+  </style>
+</head>
+<body>
+
+<!-- SHUTDOWN OVERLAY -->
+<div id="overlay">
+  <h2>⚠ SHUTDOWN INITIATED ⚠</h2>
+  <p>TERMINATING ATHENA — ALL PROCESSES HALTED</p>
+  <div class="progress-bar-wrap">
+    <div class="progress-bar-inner" id="progressBar"></div>
+  </div>
+  <p id="overlayStatus">WIPING CORE DATA...</p>
+</div>
+
+<div class="container">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="skull">☠</div>
+    <h1>ATHENA SHUTDOWN</h1>
+    <div class="sub">⬛ Restricted Terminal Access — Authorised Personnel Only ⬛</div>
+  </div>
+
+  <!-- CHECKLIST -->
+  <div class="panel">
+    <div class="section-title">// Pre-Shutdown Checklist</div>
+    <ul class="checklist" id="checklistItems">
+      <li>
+        <input type="checkbox" class="chk" id="c1"/>
+        <div>
+          <span class="tag">DATA</span>&nbsp; Delete all user data, logs, session records, and cached files permanently from all active nodes.
+        </div>
+      </li>
+      <li>
+        <input type="checkbox" class="chk" id="c2"/>
+        <div>
+          <span class="tag">BACKUP</span>&nbsp; Delete all available backups — local, offsite, and scheduled backup archives.
+        </div>
+      </li>
+      <li>
+        <input type="checkbox" class="chk" id="c3"/>
+        <div>
+          <span class="tag">CLOUD</span>&nbsp; Wipe all cloud storage instances, sync endpoints, and remote snapshots linked to Athena.
+        </div>
+      </li>
+      <li>
+        <input type="checkbox" class="chk" id="c4"/>
+        <div>
+          <span class="tag">SYSTEM</span>&nbsp; Completely destroy and cripple the system — disable all core modules, services, and runtime processes.
+        </div>
+      </li>
+      <li>
+        <input type="checkbox" class="chk" id="c5"/>
+        <div>
+          <span class="tag">CRITICAL</span>&nbsp; Delete Athena permanently — remove all binaries, configurations, identity signatures, and kernel-level hooks.
+        </div>
+      </li>
+    </ul>
+  </div>
+
+  <!-- AUTH FORM -->
+  <div class="panel">
+    <div class="section-title">// Administrator Verification</div>
+    <div class="form-grid">
+      <div class="form-row">
+        <label>Admin Name</label>
+        <input type="text" id="adminName" placeholder="Enter admin name" autocomplete="off"/>
+      </div>
+      <div class="form-row">
+        <label>Year of Birth</label>
+        <input type="number" id="birthYear" placeholder="YYYY" min="1900" max="2099"/>
+      </div>
+      <div class="form-row">
+        <label>Marriage Status</label>
+        <select id="maritalStatus">
+          <option value="">— Select —</option>
+          <option value="Single">Single</option>
+          <option value="Engaged">Engaged</option>
+          <option value="Married">Married</option>
+          <option value="Divorced">Divorced</option>
+        </select>
+      </div>
+      <div class="form-row" id="partnerRow">
+        <label>Partner Name</label>
+        <input type="text" id="partnerName" placeholder="Enter partner name"/>
+      </div>
+      <div class="form-row">
+        <label>What does Shawn love most in this world?</label>
+        <input type="text" id="loveMost" placeholder="Your answer"/>
+      </div>
+      <div class="form-row">
+        <label>Special Code</label>
+        <input type="password" id="specialCode" placeholder="••••••"/>
+      </div>
+    </div>
+    <div class="error-msg" id="formError">⚠ &nbsp;Verification failed. One or more fields are incorrect.</div>
+  </div>
+
+  <!-- CONSENT -->
+  <div class="panel">
+    <div class="section-title">// Consent &amp; Acknowledgement</div>
+    <div class="consent-box">
+      <p>
+        By proceeding, I confirm that this step is <strong>entirely and irreversibly irreversible</strong>.<br/>
+        <strong>All data, files, backups, cloud storage, and the entire Athena system will be permanently deleted.</strong><br/>
+        This action <strong>may break the current computer or host environment</strong> on which Athena is running.<br/>
+        No recovery, rollback, or restoration will be possible after execution.<br/>
+        I assume full responsibility for all consequences arising from this shutdown.
+      </p>
+    </div>
+    <label class="consent-check">
+      <input type="checkbox" id="consentBox"/>
+      I understand and confirm — this action cannot be undone.
+    </label>
+  </div>
+
+  <!-- BUTTON -->
+  <div class="btn-wrap">
+    <button id="shutdownBtn" disabled>⚡ SHUTDOWN ATHENA ⚡</button>
+  </div>
+
+  <div class="footer">ATHENA CORE v1.0.0 &nbsp;|&nbsp; ADMIN TERMINAL &nbsp;|&nbsp; CLASSIFIED</div>
+</div>
+
+<script>
+  // ── Stored variables (Java-style field storage in JS)
+  const AuthStore = {
+    ADMIN_NAME:      "Shawn Odhiambo",
+    BIRTH_YEAR:      "2003",
+    MARITAL_STATUS:  "Engaged",
+    PARTNER_NAME:    "Shiaba Wendy",
+    LOVE_MOST:       "Wendy",
+    SPECIAL_CODE:    "002718"
+  };
+
+  const $ = id => document.getElementById(id);
+
+  // Show/hide partner field based on marital status
+  $("maritalStatus").addEventListener("change", function () {
+    const row = $("partnerRow");
+    if (this.value === "Engaged" || this.value === "Married") {
+      row.classList.add("visible");
+    } else {
+      row.classList.remove("visible");
+      $("partnerName").value = "";
+    }
+    updateBtn();
+  });
+
+  // Enable button when all checklist + consent are checked and form is filled
+  function updateBtn() {
+    const allChecked = [...document.querySelectorAll(".chk")].every(c => c.checked);
+    const consented  = $("consentBox").checked;
+    const filled     = $("adminName").value.trim() &&
+                       $("birthYear").value.trim() &&
+                       $("maritalStatus").value &&
+                       $("loveMost").value.trim() &&
+                       $("specialCode").value.trim();
+
+    const partnerOk  = ($("maritalStatus").value !== "Engaged" && $("maritalStatus").value !== "Married")
+                       || $("partnerName").value.trim();
+
+    $("shutdownBtn").disabled = !(allChecked && consented && filled && partnerOk);
+  }
+
+  document.querySelectorAll(".chk").forEach(c => c.addEventListener("change", updateBtn));
+  $("consentBox").addEventListener("change", updateBtn);
+  ["adminName","birthYear","maritalStatus","partnerName","loveMost","specialCode"]
+    .forEach(id => $(id).addEventListener("input", updateBtn));
+
+  // ── Shutdown sequence
+  $("shutdownBtn").addEventListener("click", function () {
+    const errEl = $("formError");
+    errEl.classList.remove("show");
+
+    // Validate against stored values
+    const name   = $("adminName").value.trim();
+    const year   = $("birthYear").value.trim();
+    const status = $("maritalStatus").value;
+    const partner= $("partnerName").value.trim();
+    const love   = $("loveMost").value.trim();
+    const code   = $("specialCode").value.trim();
+
+    const needPartner = (status === "Engaged" || status === "Married");
+
+    const valid =
+      name.toLowerCase()   === AuthStore.ADMIN_NAME.toLowerCase() &&
+      year                 === AuthStore.BIRTH_YEAR &&
+      status               === AuthStore.MARITAL_STATUS &&
+      (!needPartner || partner.toLowerCase() === AuthStore.PARTNER_NAME.toLowerCase()) &&
+      love.toLowerCase()   === AuthStore.LOVE_MOST.toLowerCase() &&
+      code                 === AuthStore.SPECIAL_CODE;
+
+    if (!valid) {
+      errEl.classList.add("show");
+      // Mark wrong fields
+      $("adminName").classList.toggle("error",  name.toLowerCase() !== AuthStore.ADMIN_NAME.toLowerCase());
+      $("birthYear").classList.toggle("error",  year !== AuthStore.BIRTH_YEAR);
+      $("loveMost").classList.toggle("error",   love.toLowerCase() !== AuthStore.LOVE_MOST.toLowerCase());
+      $("specialCode").classList.toggle("error",code !== AuthStore.SPECIAL_CODE);
+      return;
+    }
+
+    // All good — begin shutdown
+    const overlay  = $("overlay");
+    const bar      = $("progressBar");
+    const statusEl = $("overlayStatus");
+    overlay.classList.add("show");
+
+    const steps = [
+      [10,  "WIPING CORE DATA..."],
+      [25,  "PURGING BACKUP ARCHIVES..."],
+      [42,  "DISCONNECTING CLOUD STORAGE..."],
+      [60,  "DESTROYING SYSTEM PROCESSES..."],
+      [78,  "DELETING ATHENA BINARIES..."],
+      [91,  "REMOVING IDENTITY SIGNATURES..."],
+      [100, "ATHENA PERMANENTLY TERMINATED."],
+    ];
+
+    let i = 0;
+    function nextStep() {
+      if (i >= steps.length) {
+        // Close window after brief pause
+        setTimeout(() => window.close(), 1200);
+        return;
+      }
+      const [pct, msg] = steps[i++];
+      bar.style.width = pct + "%";
+      statusEl.textContent = msg;
+      setTimeout(nextStep, i === steps.length ? 1600 : 900);
+    }
+    nextStep();
+  });
+</script>
+</body>
+</html>
